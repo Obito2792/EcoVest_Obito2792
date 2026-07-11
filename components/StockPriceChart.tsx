@@ -9,29 +9,24 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { generatePriceSeries } from "@/lib/priceHistory";
+import {
+  PricePoint,
+  RangeKey,
+  formatRangeAxisLabel,
+  formatRangeTooltipLabel,
+} from "@/lib/priceHistory";
 
 interface StockPriceChartProps {
   ticker: string;
-  avgReturn: number;
-  volatility: number;
-  price: number;
-  points?: number;
+  series: PricePoint[];
+  range: RangeKey;
   isPositive: boolean;
 }
 
 const POSITIVE_COLOR = "#22945c";
 const NEGATIVE_COLOR = "#dc2626";
 
-export default function StockPriceChart({
-  ticker,
-  avgReturn,
-  volatility,
-  price,
-  points = 60,
-  isPositive,
-}: StockPriceChartProps) {
-  const series = generatePriceSeries(ticker, avgReturn, volatility, price, points);
+export default function StockPriceChart({ ticker, series, range, isPositive }: StockPriceChartProps) {
   const color = isPositive ? POSITIVE_COLOR : NEGATIVE_COLOR;
   const gradientId = `chart-${ticker}`;
 
@@ -46,7 +41,16 @@ export default function StockPriceChart({
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-          <XAxis dataKey="index" tick={false} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="timestamp"
+            type="number"
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={(v: number) => formatRangeAxisLabel(v, range)}
+            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            axisLine={false}
+            tickLine={false}
+            minTickGap={48}
+          />
           <YAxis
             domain={["auto", "auto"]}
             tick={{ fontSize: 12 }}
@@ -55,7 +59,7 @@ export default function StockPriceChart({
           />
           <Tooltip
             formatter={(v: number) => [`$${v.toFixed(2)}`, "Price"]}
-            labelFormatter={() => ""}
+            labelFormatter={(v: number) => formatRangeTooltipLabel(v, range)}
           />
           <Area
             type="monotone"

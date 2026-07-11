@@ -10,8 +10,9 @@ import CountUp from "@/components/CountUp";
 import { sectorIcon, sectorColor } from "@/components/sectorMeta";
 import StockSparkline from "@/components/StockSparkline";
 import BonusBadge from "@/components/BonusBadge";
-import { SparklesIcon } from "@/components/Icons";
+import { SparklesIcon, TargetIcon } from "@/components/Icons";
 import { isGreenBonusEligible, formatBonusPercent } from "@/lib/bonus";
+import { generatePriceSeries, seriesChangePercent } from "@/lib/priceHistory";
 import holdingsData from "@/data/holdings.json";
 import { AccountSummary, Holding } from "@/lib/types";
 
@@ -53,6 +54,50 @@ export default function BrowsePage() {
         .sort((a, b) => b.esgScore - a.esgScore)
         .slice(0, 6)
     : [];
+
+  // Worth keeping an eye on for one of three reasons — a strong clean-energy
+  // score, a weak one (a reallocation candidate), or high volatility (a
+  // stock that moves a lot). Pulled from holdings the user doesn't already
+  // hold and that aren't already surfaced in Recommended For You, so the
+  // sections don't duplicate cards. Each bucket is capped individually so
+  // one reason can't crowd out the others; overlapping picks (e.g. a stock
+  // that's both high-ESG and high-volatility) keep whichever reason found
+  // them first.
+  const recommendedTickers = new Set(recommended.map((h) => h.ticker));
+  const watchlistEligible = dataset.filter(
+    (h) => heldShares(h.ticker) === 0 && !recommendedTickers.has(h.ticker)
+  );
+
+  const highEsgPicks = [...watchlistEligible]
+    .filter((h) => isGreenBonusEligible(h))
+    .sort((a, b) => b.esgScore - a.esgScore)
+    .slice(0, 3)
+    .map((h) => ({ holding: h, reason: "High clean-energy score" as const }));
+
+  const highVolPicks = [...watchlistEligible]
+    .sort((a, b) => b.volatility - a.volatility)
+    .slice(0, 3)
+    .map((h) => ({ holding: h, reason: "High volatility" as const }));
+
+  const lowEsgPicks = [...watchlistEligible]
+    .filter((h) => h.esgScore < 5)
+    .sort((a, b) => a.esgScore - b.esgScore)
+    .slice(0, 3)
+    .map((h) => ({ holding: h, reason: "Low clean-energy score" as const }));
+
+  const seenTickers = new Set<string>();
+  const watchlist: { holding: Holding; reason: string }[] = [];
+  for (const pick of [...highEsgPicks, ...highVolPicks, ...lowEsgPicks]) {
+    if (seenTickers.has(pick.holding.ticker)) continue;
+    seenTickers.add(pick.holding.ticker);
+    watchlist.push(pick);
+  }
+
+  const REASON_BADGE_STYLE: Record<string, string> = {
+    "High clean-energy score": "bg-forest-500/10 text-forest-600",
+    "Low clean-energy score": "bg-red-50 text-red-600",
+    "High volatility": "bg-amber-100 text-amber-700",
+  };
 
   return (
     <>
@@ -132,6 +177,69 @@ export default function BrowsePage() {
                       </button>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {watchlist.length > 0 && (
+          <div className="animate-fade-in-up mb-6" style={{ animationDelay: "50ms" }}>
+            <div className="mb-3 flex items-center gap-2">
+              <IconChip icon={<TargetIcon className="h-4 w-4" />} color="blue" size="sm" />
+              <h2 className="text-sm font-semibold text-navy-900">Watchlist</h2>
+              <span className="badge bg-blue-100 text-blue-700">Worth keeping an eye on</span>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {watchlist.map(({ holding: h, reason }, i) => {
+                const series = generatePriceSeries(h.ticker, h.avgReturn, h.volatility, h.price);
+                const changePercent = seriesChangePercent(series);
+                const isPositive = changePercent >= 0;
+                return (
+                  <Link
+                    key={h.ticker}
+                    href={`/stock/${h.ticker}`}
+                    className="card-hover !cursor-pointer animate-fade-in-up flex w-60 flex-shrink-0 flex-col"
+                    style={{ animationDelay: `${90 + i * 40}ms` }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <IconChip icon={sectorIcon(h.sector, "h-4 w-4")} color={sectorColor(h.sector)} size="sm" />
+                        <div className="min-w-0">
+                          <div className="font-semibold text-navy-900">{h.ticker}</div>
+                          <div className="line-clamp-2 text-xs leading-snug text-slate-500">
+                            {h.name}
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 badge ${
+                          h.esgScore >= 7.5
+                            ? "bg-forest-500/10 text-forest-600"
+                            : h.esgScore >= 5
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-red-50 text-red-600"
+                        }`}
+                      >
+                        {h.esgScore}/10
+                      </span>
+                    </div>
+                    <span
+                      className={`badge mt-2.5 w-fit text-xs ${REASON_BADGE_STYLE[reason]}`}
+                    >
+                      {reason}
+                    </span>
+                    <div className="mt-auto flex items-center justify-between pt-4">
+                      <span className="text-sm font-medium text-navy-900">${h.price.toFixed(2)}</span>
+                      <span
+                        className={`text-xs font-semibold ${
+                          isPositive ? "text-forest-600" : "text-red-600"
+                        }`}
+                      >
+                        {isPositive ? "▲" : "▼"} {Math.abs(changePercent * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  </Link>
                 );
               })}
             </div>

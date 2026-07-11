@@ -10,7 +10,13 @@ import StockPriceChart from "@/components/StockPriceChart";
 import BonusBadge from "@/components/BonusBadge";
 import { sectorIcon, sectorColor } from "@/components/sectorMeta";
 import { isGreenBonusEligible } from "@/lib/bonus";
-import { generatePriceSeries, seriesChangePercent } from "@/lib/priceHistory";
+import {
+  generateRangeSeries,
+  seriesChangePercent,
+  RANGE_KEYS,
+  RANGE_META,
+  RangeKey,
+} from "@/lib/priceHistory";
 import holdingsData from "@/data/holdings.json";
 import { AccountSummary, Holding } from "@/lib/types";
 
@@ -24,6 +30,7 @@ export default function StockDetailPage() {
 
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [modal, setModal] = useState<{ side: "BUY" | "SELL" } | null>(null);
+  const [range, setRange] = useState<RangeKey>("1D");
 
   async function loadAccount() {
     const res = await fetch("/api/account");
@@ -48,8 +55,8 @@ export default function StockDetailPage() {
 
   const series = useMemo(() => {
     if (!holding) return [];
-    return generatePriceSeries(holding.ticker, holding.avgReturn, holding.volatility, holding.price, 60);
-  }, [holding]);
+    return generateRangeSeries(holding.ticker, holding.avgReturn, holding.volatility, holding.price, range);
+  }, [holding, range]);
 
   if (!holding) {
     return (
@@ -126,12 +133,26 @@ export default function StockDetailPage() {
           <div className="mt-6">
             <StockPriceChart
               ticker={holding.ticker}
-              avgReturn={holding.avgReturn}
-              volatility={holding.volatility}
-              price={holding.price}
+              series={series}
+              range={range}
               isPositive={isPositive}
             />
-            <p className="mt-1 text-center text-xs text-slate-400">
+            <div className="mt-3 flex items-center justify-center gap-1 rounded-full bg-slate-100 p-1">
+              {RANGE_KEYS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    range === r
+                      ? "bg-white text-navy-900 shadow-sm"
+                      : "text-slate-500 hover:text-navy-900"
+                  }`}
+                >
+                  {RANGE_META[r].label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-center text-xs text-slate-400">
               Simulated price history — for illustration only, not real market data.
             </p>
           </div>
