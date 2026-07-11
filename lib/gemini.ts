@@ -5,9 +5,16 @@ import { GoogleGenAI } from "@google/genai";
 // free tier is either locked at limit:0 or rejected outright with a 401
 // ACCESS_TOKEN_TYPE_UNSUPPORTED error (see Google AI Developer forum threads
 // on "AQ. key" issues, July 2026). Vertex AI auth uses a real service-account
-// credential (OAuth2 under the hood via Application Default Credentials),
-// which sidesteps that bug entirely. GOOGLE_APPLICATION_CREDENTIALS in
-// .env.local points at the downloaded service-account JSON key file.
+// credential (OAuth2 under the hood via Application Default Credentials).
+//
+// Two ways to supply that credential, checked in this order:
+//  1. GCP_SERVICE_ACCOUNT_KEY — the *entire contents* of the downloaded
+//     service-account JSON key, pasted as one env var. This is the only
+//     option that works on Vercel (and other serverless hosts), since there
+//     is no persistent local file to point at.
+//  2. GOOGLE_APPLICATION_CREDENTIALS — an absolute path to that same JSON
+//     file on disk. Only works for local dev (`npm run dev`), where the file
+//     actually exists on your machine.
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const PROJECT_ID = process.env.GCP_PROJECT_ID;
 const LOCATION = process.env.GCP_LOCATION || "us-central1";
@@ -17,19 +24,40 @@ let cachedClient: GoogleGenAI | null = null;
 function getClient(): GoogleGenAI {
   if (!PROJECT_ID) {
     throw new Error(
-      "GCP_PROJECT_ID is not set. Add it to .env.local (the project ID from your service-account JSON file) to enable Gemini-powered features."
+      "GCP_PROJECT_ID is not set. Add it to your environment (the project ID from your service-account JSON file) to enable Gemini-powered features."
     );
   }
-  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+
+  const inlineKey = process.env.GCP_SERVICE_ACCOUNT_KEY;
+  const keyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+  if (!inlineKey && !keyFilePath) {
     throw new Error(
-      "GOOGLE_APPLICATION_CREDENTIALS is not set. Add it to .env.local as the absolute path to your downloaded service-account JSON key file."
+      "No Google Cloud credentials found. Set GCP_SERVICE_ACCOUNT_KEY (the full service-account JSON key, as one env var — required on Vercel) or GOOGLE_APPLICATION_CREDENTIALS (a local file path, for `npm run dev` only)."
     );
   }
+
   if (!cachedClient) {
+    let credentials: Record<string, unknown> | undefined;
+    if (inlineKey) {
+      try {
+        credentials = JSON.parse(inlineKey);
+      } catch {
+        throw new Error(
+          "GCP_SERVICE_ACCOUNT_KEY isn't valid JSON. Paste the full contents of the service-account key file (starting with '{\"type\": \"service_account\", ...}') as-is."
+        );
+      }
+    }
+
     cachedClient = new GoogleGenAI({
       vertexai: true,
       project: PROJECT_ID,
       location: LOCATION,
+      // Omitted entirely when using the file-path method, so the SDK falls
+      // back to Application Default Credentials (which reads
+      // GOOGLE_APPLICATION_CREDENTIALS itself) — local dev behavior is
+      // unchanged.
+      ...(credentials ? { googleAuthOptions: { credentials } } : {}),
     });
   }
   return cachedClient;
@@ -111,5 +139,7 @@ export async function generateText(
 }
 
 export function isGeminiConfigured(): boolean {
-  return Boolean(PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  return Boolean(
+    PROJECT_ID && (process.env.GCP_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  );
 }

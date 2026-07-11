@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const rows = getTransactions(session.userId);
+  const rows = await getTransactions(session.userId);
   return NextResponse.json({
     transactions: rows.map((t) => ({
       id: t.id,

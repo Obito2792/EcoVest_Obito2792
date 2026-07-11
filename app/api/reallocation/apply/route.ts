@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const account = getAccountSummary(session.userId);
+    const account = await getAccountSummary(session.userId);
     if (account.positions.length === 0 || account.holdingsValue <= 0) {
       return NextResponse.json(
         {
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       const dollarAmount = Math.abs(move.delta) * holdingsValue;
       const shares = Math.min(Math.round(dollarAmount / holding.price), heldShares);
       if (shares > 0) {
-        executeTrade(session.userId, move.ticker, "SELL", shares);
+        await executeTrade(session.userId, move.ticker, "SELL", shares);
         executed.push({ ticker: move.ticker, side: "SELL", shares });
       }
     }
@@ -59,18 +59,18 @@ export async function POST(req: NextRequest) {
     for (const move of buys) {
       const holding = getHolding(move.ticker);
       const dollarAmount = move.delta * holdingsValue;
-      const user = getUserById(session.userId);
+      const user = await getUserById(session.userId);
       const cash = user?.cashBalance ?? 0;
       const affordableShares = Math.floor(cash / holding.price);
       const shares = Math.min(Math.floor(dollarAmount / holding.price), affordableShares);
       if (shares > 0) {
-        const result = executeTrade(session.userId, move.ticker, "BUY", shares);
+        const result = await executeTrade(session.userId, move.ticker, "BUY", shares);
         executed.push({ ticker: move.ticker, side: "BUY", shares });
         if (result.bonus) bonuses.push(result.bonus);
       }
     }
 
-    const updatedAccount = getAccountSummary(session.userId);
+    const updatedAccount = await getAccountSummary(session.userId);
     return NextResponse.json({ account: updatedAccount, executed, bonuses });
   } catch (err) {
     if (err instanceof TradeError) {

@@ -19,9 +19,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    liquidateAll(session.userId);
+    await liquidateAll(session.userId);
 
-    const user = getUserById(session.userId);
+    const user = await getUserById(session.userId);
     if (!user) throw new TradeError("Account not found.");
     const availableCash = user.cashBalance;
     const bonuses: BonusAward[] = [];
@@ -31,12 +31,12 @@ export async function POST(req: NextRequest) {
       const dollars = line.weight * availableCash;
       const shares = Math.floor(dollars / holding.price);
       if (shares > 0) {
-        const result = executeTrade(session.userId, line.ticker, "BUY", shares);
+        const result = await executeTrade(session.userId, line.ticker, "BUY", shares);
         if (result.bonus) bonuses.push(result.bonus);
       }
     }
 
-    const account = getAccountSummary(session.userId);
+    const account = await getAccountSummary(session.userId);
     return NextResponse.json({ ...account, bonuses });
   } catch (err) {
     if (err instanceof TradeError) {

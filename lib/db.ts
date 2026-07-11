@@ -1,84 +1,16 @@
-import { DatabaseSync } from "node:sqlite";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { supabaseAdmin } from "./supabaseAdmin";
 
-// EcoVest uses Node's built-in `node:sqlite` module rather than an ORM like
-// Prisma. This is a deliberate hackathon-speed choice: it ships with Node
-// itself (Node 22.5+), needs zero installs or native binary downloads, and
-// is still genuinely SQLite underneath. Swap this file out for Prisma or
-// better-sqlite3 later if you want migrations/type-gen — every other file
-// only talks to the small helper functions exported below.
+// EcoVest's data layer, backed by Supabase (hosted Postgres) instead of the
+// local node:sqlite file this used to be. That local-file approach only ever
+// worked for `npm run dev` — Vercel's serverless functions have no
+// persistent filesystem, so every request would have started from a fresh,
+// empty database. Every function below is now async (network calls to
+// Supabase's REST API under the hood), so every caller needs an `await`.
+// See supabase/schema.sql for the table definitions this expects.
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __ecovestDb: DatabaseSync | undefined;
-}
-
-/** Adds a column if it doesn't already exist. node:sqlite has no migration
- * system, so this lets us evolve the `users` table across app updates
- * without wiping existing local accounts (cash balance, positions, and
- * transaction history all survive). Throws only get swallowed when they're
- * the expected "duplicate column name" error from SQLite. */
-function ensureColumn(db: DatabaseSync, table: string, column: string, ddl: string) {
-  try {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl};`);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (!/duplicate column name/i.test(message)) {
-      throw err;
-    }
-  }
-}
-
-function initDb(): DatabaseSync {
-  const dbPath = path.join(process.cwd(), "ecovest.db");
-  const db = new DatabaseSync(dbPath);
-  db.exec(`PRAGMA journal_mode = WAL;`);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      passwordHash TEXT NOT NULL,
-      cashBalance REAL NOT NULL DEFAULT 10000,
-      createdAt TEXT NOT NULL
-    );
-  `);
-  // Profile fields — added via migration so existing local databases (from
-  // before the Create Your Profile step existed) keep their users, cash
-  // balances, and history intact instead of needing a fresh ecovest.db.
-  ensureColumn(db, "users", "firstName", "TEXT");
-  ensureColumn(db, "users", "lastName", "TEXT");
-  ensureColumn(db, "users", "interests", "TEXT NOT NULL DEFAULT '[]'");
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS positions (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      ticker TEXT NOT NULL,
-      shares INTEGER NOT NULL,
-      UNIQUE(userId, ticker)
-    );
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS transactions (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      ticker TEXT NOT NULL,
-      side TEXT NOT NULL,
-      shares INTEGER NOT NULL,
-      price REAL NOT NULL,
-      cashAfter REAL NOT NULL,
-      createdAt TEXT NOT NULL
-    );
-  `);
-  return db;
-}
-
-function getDb(): DatabaseSync {
-  if (!global.__ecovestDb) {
-    global.__ecovestDb = initDb();
-  }
-  return global.__ecovestDb;
+function unwrap<T>(data: T | null, error: { message: string } | null): T | undefined {
+  if (error) throw new Error(error.message);
+  return data ?? undefined;
 }
 
 export interface UserRow {
@@ -93,56 +25,58 @@ export interface UserRow {
   interests: string;
 }
 
-export function createUser(email: string, passwordHash: string): UserRow {
-  const db = getDb();
-  const id = randomUUID();
-  const createdAt = new Date().toISOString();
+export async function createUser(email: string, passwordHash: string): Promise<UserRow> {
   const normalizedEmail = email.toLowerCase();
-  db.prepare(
-    `INSERT INTO users (id, email, passwordHash, cashBalance, createdAt, firstName, lastName, interests) VALUES (?, ?, ?, 10000, ?, NULL, NULL, '[]')`
-  ).run(id, normalizedEmail, passwordHash, createdAt);
-  return {
-    id,
-    email: normalizedEmail,
-    passwordHash,
-    cashBalance: 10000,
-    createdAt,
-    firstName: null,
-    lastName: null,
-    interests: "[]",
-  };
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .insert({
+      email: normalizedEmail,
+      passwordHash,
+      cashBalance: 10000,
+      firstName: null,
+      lastName: null,
+      interests: "[]",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data as UserRow;
 }
 
-export function getUserByEmail(email: string): UserRow | undefined {
-  const db = getDb();
-  const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email.toLowerCase());
-  return row as UserRow | undefined;
+export async function getUserByEmail(email: string): Promise<UserRow | undefined> {
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  return unwrap(data as UserRow | null, error);
 }
 
-export function getUserById(id: string): UserRow | undefined {
-  const db = getDb();
-  const row = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
-  return row as UserRow | undefined;
+export async function getUserById(id: string): Promise<UserRow | undefined> {
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  return unwrap(data as UserRow | null, error);
 }
 
-export function updateUserCash(id: string, cashBalance: number): void {
-  const db = getDb();
-  db.prepare(`UPDATE users SET cashBalance = ? WHERE id = ?`).run(cashBalance, id);
+export async function updateUserCash(id: string, cashBalance: number): Promise<void> {
+  const { error } = await supabaseAdmin.from("users").update({ cashBalance }).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
-export function updateUserProfile(
+export async function updateUserProfile(
   id: string,
   firstName: string,
   lastName: string,
   interests: string[]
-): void {
-  const db = getDb();
-  db.prepare(`UPDATE users SET firstName = ?, lastName = ?, interests = ? WHERE id = ?`).run(
-    firstName,
-    lastName,
-    JSON.stringify(interests),
-    id
-  );
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("users")
+    .update({ firstName, lastName, interests: JSON.stringify(interests) })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export interface PositionRow {
@@ -152,43 +86,49 @@ export interface PositionRow {
   shares: number;
 }
 
-export function getPositions(userId: string): PositionRow[] {
-  const db = getDb();
-  const rows = db.prepare(`SELECT * FROM positions WHERE userId = ? ORDER BY ticker`).all(userId);
-  return rows as unknown as PositionRow[];
+export async function getPositions(userId: string): Promise<PositionRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from("positions")
+    .select("*")
+    .eq("userId", userId)
+    .order("ticker", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data as PositionRow[]) ?? [];
 }
 
-export function getPosition(userId: string, ticker: string): PositionRow | undefined {
-  const db = getDb();
-  const row = db
-    .prepare(`SELECT * FROM positions WHERE userId = ? AND ticker = ?`)
-    .get(userId, ticker);
-  return row as PositionRow | undefined;
+export async function getPosition(userId: string, ticker: string): Promise<PositionRow | undefined> {
+  const { data, error } = await supabaseAdmin
+    .from("positions")
+    .select("*")
+    .eq("userId", userId)
+    .eq("ticker", ticker)
+    .maybeSingle();
+  return unwrap(data as PositionRow | null, error);
 }
 
-export function upsertPositionShares(userId: string, ticker: string, shares: number): void {
-  const db = getDb();
-  const existing = getPosition(userId, ticker);
-  if (existing) {
-    db.prepare(`UPDATE positions SET shares = ? WHERE id = ?`).run(shares, existing.id);
-  } else {
-    db.prepare(`INSERT INTO positions (id, userId, ticker, shares) VALUES (?, ?, ?, ?)`).run(
-      randomUUID(),
-      userId,
-      ticker,
-      shares
-    );
-  }
+export async function upsertPositionShares(
+  userId: string,
+  ticker: string,
+  shares: number
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("positions")
+    .upsert({ userId, ticker, shares }, { onConflict: "userId,ticker" });
+  if (error) throw new Error(error.message);
 }
 
-export function deletePosition(userId: string, ticker: string): void {
-  const db = getDb();
-  db.prepare(`DELETE FROM positions WHERE userId = ? AND ticker = ?`).run(userId, ticker);
+export async function deletePosition(userId: string, ticker: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("positions")
+    .delete()
+    .eq("userId", userId)
+    .eq("ticker", ticker);
+  if (error) throw new Error(error.message);
 }
 
-export function clearPositions(userId: string): void {
-  const db = getDb();
-  db.prepare(`DELETE FROM positions WHERE userId = ?`).run(userId);
+export async function clearPositions(userId: string): Promise<void> {
+  const { error } = await supabaseAdmin.from("positions").delete().eq("userId", userId);
+  if (error) throw new Error(error.message);
 }
 
 export interface TransactionRow {
@@ -202,33 +142,31 @@ export interface TransactionRow {
   createdAt: string;
 }
 
-export function insertTransaction(entry: {
+export async function insertTransaction(entry: {
   userId: string;
   ticker: string;
   side: "BUY" | "SELL" | "BONUS";
   shares: number;
   price: number;
   cashAfter: number;
-}): void {
-  const db = getDb();
-  db.prepare(
-    `INSERT INTO transactions (id, userId, ticker, side, shares, price, cashAfter, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    randomUUID(),
-    entry.userId,
-    entry.ticker,
-    entry.side,
-    entry.shares,
-    entry.price,
-    entry.cashAfter,
-    new Date().toISOString()
-  );
+}): Promise<void> {
+  const { error } = await supabaseAdmin.from("transactions").insert({
+    userId: entry.userId,
+    ticker: entry.ticker,
+    side: entry.side,
+    shares: entry.shares,
+    price: entry.price,
+    cashAfter: entry.cashAfter,
+  });
+  if (error) throw new Error(error.message);
 }
 
-export function getTransactions(userId: string): TransactionRow[] {
-  const db = getDb();
-  const rows = db
-    .prepare(`SELECT * FROM transactions WHERE userId = ? ORDER BY createdAt DESC`)
-    .all(userId);
-  return rows as unknown as TransactionRow[];
+export async function getTransactions(userId: string): Promise<TransactionRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from("transactions")
+    .select("*")
+    .eq("userId", userId)
+    .order("createdAt", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as TransactionRow[]) ?? [];
 }

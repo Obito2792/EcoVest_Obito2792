@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = executeTrade(session.userId, ticker, side, shares);
-    const account = getAccountSummary(session.userId);
+    const result = await executeTrade(session.userId, ticker, side, shares);
+    const account = await getAccountSummary(session.userId);
     return NextResponse.json({ ...account, bonus: result.bonus ?? null });
   } catch (err) {
     if (err instanceof TradeError) {

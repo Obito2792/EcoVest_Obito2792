@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = getUserByEmail(email);
+    const existing = await getUserByEmail(email);
     if (existing) {
       return NextResponse.json(
         { error: "An account with that email already exists." },
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const user = createUser(email, passwordHash);
+    const user = await createUser(email, passwordHash);
     const token = await signSession({ userId: user.id, email: user.email });
 
     const res = NextResponse.json({ email: user.email, cashBalance: user.cashBalance });

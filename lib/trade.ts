@@ -47,19 +47,19 @@ export function getHolding(ticker: string): Holding {
   return h;
 }
 
-export function executeTrade(
+export async function executeTrade(
   userId: string,
   tickerRaw: string,
   side: TradeSide,
   shares: number
-): TradeResult {
+): Promise<TradeResult> {
   const ticker = tickerRaw.toUpperCase();
   if (!Number.isFinite(shares) || !Number.isInteger(shares) || shares <= 0) {
     throw new TradeError("Shares must be a positive whole number.");
   }
 
   const holding = getHolding(ticker);
-  const user = getUserById(userId);
+  const user = await getUserById(userId);
   if (!user) throw new TradeError("Account not found.");
 
   const price = holding.price;
@@ -74,17 +74,17 @@ export function executeTrade(
       );
     }
     const newCash = user.cashBalance - cost;
-    updateUserCash(userId, newCash);
-    const existing = getPosition(userId, ticker);
-    upsertPositionShares(userId, ticker, (existing?.shares ?? 0) + shares);
-    insertTransaction({ userId, ticker, side, shares, price, cashAfter: newCash });
+    await updateUserCash(userId, newCash);
+    const existing = await getPosition(userId, ticker);
+    await upsertPositionShares(userId, ticker, (existing?.shares ?? 0) + shares);
+    await insertTransaction({ userId, ticker, side, shares, price, cashAfter: newCash });
 
     if (isGreenBonusEligible(holding)) {
       const bonusAmount = Math.round(cost * GREEN_BONUS_PERCENT * 100) / 100;
       if (bonusAmount > 0) {
         const cashWithBonus = newCash + bonusAmount;
-        updateUserCash(userId, cashWithBonus);
-        insertTransaction({
+        await updateUserCash(userId, cashWithBonus);
+        await insertTransaction({
           userId,
           ticker,
           side: "BONUS",
@@ -107,7 +107,7 @@ export function executeTrade(
   }
 
   // SELL
-  const existing = getPosition(userId, ticker);
+  const existing = await getPosition(userId, ticker);
   const held = existing?.shares ?? 0;
   if (shares > held) {
     throw new TradeError(
@@ -116,25 +116,25 @@ export function executeTrade(
   }
   const proceeds = price * shares;
   const newCash = user.cashBalance + proceeds;
-  updateUserCash(userId, newCash);
+  await updateUserCash(userId, newCash);
   const remaining = held - shares;
   if (remaining > 0) {
-    upsertPositionShares(userId, ticker, remaining);
+    await upsertPositionShares(userId, ticker, remaining);
   } else {
-    deletePosition(userId, ticker);
+    await deletePosition(userId, ticker);
   }
-  insertTransaction({ userId, ticker, side, shares, price, cashAfter: newCash });
+  await insertTransaction({ userId, ticker, side, shares, price, cashAfter: newCash });
   return { cashBalance: newCash, ticker, side, shares, price };
 }
 
 /** Sells 100% of every current holding, converting the whole portfolio to
  * cash. Used by the sample-portfolio loader so it can be re-triggered from
  * any starting state during a demo. */
-export function liquidateAll(userId: string): void {
-  const positions = getPositions(userId);
+export async function liquidateAll(userId: string): Promise<void> {
+  const positions = await getPositions(userId);
   for (const p of positions) {
     if (p.shares > 0) {
-      executeTrade(userId, p.ticker, "SELL", p.shares);
+      await executeTrade(userId, p.ticker, "SELL", p.shares);
     }
   }
 }
@@ -148,10 +148,10 @@ function parseInterests(raw: string): string[] {
   }
 }
 
-export function getAccountSummary(userId: string): AccountSummary {
-  const user = getUserById(userId);
+export async function getAccountSummary(userId: string): Promise<AccountSummary> {
+  const user = await getUserById(userId);
   if (!user) throw new TradeError("Account not found.");
-  const positions = getPositions(userId).map((p) => ({ ticker: p.ticker, shares: p.shares }));
+  const positions = (await getPositions(userId)).map((p) => ({ ticker: p.ticker, shares: p.shares }));
   let holdingsValue = 0;
   for (const p of positions) {
     const h = dataset.find((d) => d.ticker === p.ticker);
