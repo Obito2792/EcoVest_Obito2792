@@ -74,6 +74,7 @@ export default function LandingScreen() {
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             {[
               { value: "19", label: "Stocks & ETFs Tracked" },
+              { value: "4.50%", label: "Green Portfolio APY" },
               { value: "3", label: "Sponsor Tracks" },
               { value: "Live", label: "Gemini API" },
             ].map((s) => (
@@ -197,6 +198,67 @@ export default function LandingScreen() {
               <div className="card absolute -bottom-5 left-6 right-6 flex items-center justify-between py-3">
                 <span className="text-sm font-semibold text-navy-900">Gemini-Powered</span>
                 <span className="badge bg-forest-500/10 text-forest-600">Live API</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GREEN PORTFOLIO APY — incentive callout */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-forest-800 via-forest-900 to-forest-950">
+        <div className="pointer-events-none absolute -left-16 top-0 h-64 w-64 animate-float rounded-full bg-forest-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 animate-float rounded-full bg-forest-300/10 blur-3xl" style={{ animationDelay: "1s" }} />
+
+        <div className="relative mx-auto max-w-5xl px-6 py-16">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <span className="badge mb-4 w-fit bg-forest-400/20 text-forest-300">
+                🌿 GREEN PORTFOLIO APY
+              </span>
+              <h2 className="text-3xl font-bold leading-tight text-white sm:text-4xl">
+                Go 80% green, earn 4.50% APY
+              </h2>
+              <p className="mt-4 max-w-xl text-slate-300">
+                Once at least <span className="font-semibold text-white">80%</span>{" "}
+                of your portfolio&apos;s value is in stocks and ETFs rated{" "}
+                <span className="font-semibold text-white">8/10 or better</span>{" "}
+                on clean energy, your account becomes eligible for a simulated{" "}
+                <span className="font-semibold text-forest-300">4.50% APY</span>{" "}
+                — on top of the Clean-Energy Buy Bonus you already earn on
+                qualifying purchases. Illustrative only, like everything else
+                in EcoVest — no real money, ever.
+              </p>
+              <Link
+                href="/signup"
+                className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-semibold text-forest-800 shadow-lg transition hover:-translate-y-0.5 hover:shadow-glow-soft"
+              >
+                Get Started Free
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="rounded-2xl border border-forest-400/30 bg-white/5 p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between text-sm text-forest-200">
+                <span>Your green share</span>
+                <span className="font-semibold text-white">82%</span>
+              </div>
+              <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-[82%] rounded-full bg-forest-400" />
+              </div>
+              <div className="mt-1 flex justify-between text-[11px] text-forest-300/70">
+                <span>0%</span>
+                <span>80% unlocks APY</span>
+                <span>100%</span>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-forest-200">
+                    Eligible for
+                  </div>
+                  <div className="text-2xl font-bold text-white">4.50% APY</div>
+                </div>
+                <span className="badge bg-forest-400/20 text-forest-200">✅ Unlocked</span>
               </div>
             </div>
           </div>

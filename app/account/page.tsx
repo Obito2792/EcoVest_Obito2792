@@ -6,12 +6,14 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import GradientBanner from "@/components/GradientBanner";
 import SamplePortfolioModal from "@/components/SamplePortfolioModal";
+import GreenApyBanner from "@/components/GreenApyBanner";
 import CountUp from "@/components/CountUp";
 import IconChip from "@/components/IconChip";
 import StockSparkline from "@/components/StockSparkline";
 import { sectorIcon, sectorColor } from "@/components/sectorMeta";
 import holdingsData from "@/data/holdings.json";
 import { AccountSummary, Holding } from "@/lib/types";
+import { computeGreenApyStatus } from "@/lib/apy";
 
 const dataset = holdingsData as Holding[];
 
@@ -102,6 +104,8 @@ export default function AccountPage() {
     })
     .sort((a, b) => b.value - a.value);
 
+  const apyStatus = computeGreenApyStatus(account.positions, dataset);
+
   return (
     <>
       <Header authed />
@@ -123,6 +127,10 @@ export default function AccountPage() {
               { value: `${account.positions.length}`, label: "Positions" },
             ]}
           />
+        </div>
+
+        <div className="animate-fade-in-up mb-6" style={{ animationDelay: "40ms" }}>
+          <GreenApyBanner status={apyStatus} />
         </div>
 
         <div

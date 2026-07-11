@@ -7,8 +7,9 @@ import Header from "@/components/Header";
 import IconChip from "@/components/IconChip";
 import TradeModal from "@/components/TradeModal";
 import StockPriceChart from "@/components/StockPriceChart";
+import BonusBadge from "@/components/BonusBadge";
 import { sectorIcon, sectorColor } from "@/components/sectorMeta";
-import { isGreenBonusEligible, formatBonusPercent } from "@/lib/bonus";
+import { isGreenBonusEligible } from "@/lib/bonus";
 import { generatePriceSeries, seriesChangePercent } from "@/lib/priceHistory";
 import holdingsData from "@/data/holdings.json";
 import { AccountSummary, Holding } from "@/lib/types";
@@ -115,9 +116,7 @@ export default function StockDetailPage() {
               {holding.esgScore}/10 ESG
             </span>
             {isGreenBonusEligible(holding) && (
-              <span className="badge bg-amber-100 text-amber-700">
-                🌱 {formatBonusPercent()} Bonus
-              </span>
+              <BonusBadge ticker={holding.ticker} price={holding.price} />
             )}
             {heldShares > 0 && (
               <span className="badge bg-blue-100 text-blue-700">You hold {heldShares} shares</span>

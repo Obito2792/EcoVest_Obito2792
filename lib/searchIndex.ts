@@ -70,6 +70,13 @@ export const FEATURES: SearchableFeature[] = [
     href: "/browse",
   },
   {
+    id: "green-portfolio-apy",
+    label: "Green Portfolio APY",
+    description: "Hold 80%+ of your portfolio in 8+/10 clean-energy holdings to unlock a simulated 4.50% APY — tracked on the Account page.",
+    keywords: ["apy", "interest", "green apy", "4.50%", "yield", "incentive"],
+    href: "/account",
+  },
+  {
     id: "ask-gemini",
     label: "Ask Gemini Assistant",
     description: "Open the chat assistant to ask about any holding or how EcoVest works.",

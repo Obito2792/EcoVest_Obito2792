@@ -15,3 +15,9 @@ export function isGreenBonusEligible(holding: Holding): boolean {
 export function formatBonusPercent(): string {
   return `${Math.round(GREEN_BONUS_PERCENT * 100)}%`;
 }
+
+// Precise, two-decimal form (e.g. "2.00%") for the bonus badge's click-to-reveal
+// detail, where showing the exact figure matters more than a short label.
+export function formatBonusPercentPrecise(): string {
+  return `${(GREEN_BONUS_PERCENT * 100).toFixed(2)}%`;
+}
