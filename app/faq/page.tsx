@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ForestSilhouette from "@/components/ForestSilhouette";
+import { LeafIcon, ArrowRightIcon } from "@/components/Icons";
 
 interface FaqEntry {
   question: string;
@@ -116,9 +119,22 @@ export default function FaqPage() {
     <>
       <Header authed={authed} />
 
+      {/* HERO — deep forest gradient with a hand-drawn treeline at the base */}
       <section className="relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-forest-700">
-        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-forest-500/20 blur-3xl" />
-        <div className="relative mx-auto max-w-3xl px-6 py-16 text-center">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 animate-float rounded-full bg-forest-500/20 blur-3xl" />
+        <div
+          className="pointer-events-none absolute -right-16 top-1/3 h-64 w-64 animate-float rounded-full bg-forest-300/10 blur-3xl"
+          style={{ animationDelay: "1.2s" }}
+        />
+        <LeafIcon className="animate-sway pointer-events-none absolute left-[8%] top-[18%] h-8 w-8 text-forest-300/40" />
+        <span
+          className="animate-sway pointer-events-none absolute right-[12%] top-[40%] block"
+          style={{ animationDelay: "0.8s" }}
+        >
+          <LeafIcon className="h-10 w-10 text-forest-300/30" />
+        </span>
+
+        <div className="relative mx-auto max-w-3xl px-6 pb-32 pt-16 text-center">
           <span className="badge mx-auto mb-5 w-fit bg-forest-500/20 text-forest-300">
             HELP CENTER
           </span>
@@ -130,13 +146,15 @@ export default function FaqPage() {
             Gemini assistant fits in.
           </p>
         </div>
+
+        <ForestSilhouette className="h-32 text-forest-950" />
       </section>
 
-      <section className="bg-white">
+      <section className="bg-forest-50">
         <div className="mx-auto max-w-3xl px-6 py-16">
           {FAQ_CATEGORIES.map((cat) => (
             <div key={cat.title} className="mb-10 last:mb-0">
-              <h2 className="mb-4 text-lg font-bold text-navy-900">{cat.title}</h2>
+              <h2 className="mb-4 text-lg font-bold text-forest-900">{cat.title}</h2>
               <div className="space-y-3">
                 {cat.entries.map((entry) => (
                   <details
@@ -158,6 +176,29 @@ export default function FaqPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* CLOSING CTA — deep forest gradient with treeline, matching About & Features */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-forest-700 via-forest-900 to-forest-950 pb-32 pt-16">
+        <div className="pointer-events-none absolute -right-20 top-10 h-72 w-72 animate-float rounded-full bg-forest-400/20 blur-3xl" />
+        <div className="relative mx-auto max-w-2xl px-6 text-center">
+          <h2 className="text-2xl font-bold text-white sm:text-3xl">
+            Still have a question?
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-forest-100">
+            Sign up and ask the Gemini assistant anytime from the header —
+            it's grounded in your actual holdings, no real money involved.
+          </p>
+          <Link
+            href={authed ? "/account" : "/signup"}
+            className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-semibold text-forest-800 shadow-lg transition hover:-translate-y-0.5 hover:shadow-glow-soft"
+          >
+            {authed ? "Go to Account" : "Get Started Free"}
+            <ArrowRightIcon className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <ForestSilhouette className="h-32 text-forest-950" />
       </section>
 
       <Footer />

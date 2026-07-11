@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ForestSilhouette from "@/components/ForestSilhouette";
 import IconChip, { ChipColor } from "@/components/IconChip";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/components/Toast";
@@ -175,14 +176,22 @@ export default function FeaturesPage() {
     <>
       <Header authed={authed} />
 
-      {/* HERO */}
+      {/* HERO — deep forest gradient with a hand-drawn treeline at the base */}
       <section className="relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-forest-700">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 animate-float rounded-full bg-forest-500/20 blur-3xl" />
         <div
-          className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 animate-float rounded-full bg-blue-500/10 blur-3xl"
+          className="pointer-events-none absolute -right-16 top-1/3 h-64 w-64 animate-float rounded-full bg-blue-500/10 blur-3xl"
           style={{ animationDelay: "1.4s" }}
         />
-        <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
+        <LeafIcon className="animate-sway pointer-events-none absolute left-[8%] top-[18%] h-8 w-8 text-forest-300/40" />
+        <span
+          className="animate-sway pointer-events-none absolute right-[12%] top-[40%] block"
+          style={{ animationDelay: "0.8s" }}
+        >
+          <LeafIcon className="h-10 w-10 text-forest-300/30" />
+        </span>
+
+        <div className="relative mx-auto max-w-4xl px-6 pb-32 pt-16 text-center">
           <span className="animate-fade-in-up badge mx-auto mb-5 w-fit bg-forest-500/20 text-forest-300">
             EVERYTHING IN ECOVEST
           </span>
@@ -201,13 +210,15 @@ export default function FeaturesPage() {
             as illustrative and simulated.
           </p>
         </div>
+
+        <ForestSilhouette className="h-32 text-forest-950" />
       </section>
 
       {/* INTERACTIVE SPOTLIGHT — pick a feature, watch it come alive */}
-      <section className="bg-white">
+      <section className="bg-forest-50">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-navy-900">See it in action</h2>
+            <h2 className="text-2xl font-bold text-forest-900">See it in action</h2>
             <p className="mx-auto mt-2 max-w-lg text-sm text-slate-600">
               Click a feature — or just wait, it rotates on its own.
             </p>
@@ -260,9 +271,9 @@ export default function FeaturesPage() {
       </section>
 
       {/* FULL FEATURE GRID */}
-      <section className="bg-forest-500/5">
+      <section className="bg-forest-100/50">
         <div className="mx-auto max-w-5xl px-6 py-16">
-          <h2 className="text-center text-2xl font-bold text-navy-900">
+          <h2 className="text-center text-2xl font-bold text-forest-900">
             Everything included
           </h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -285,21 +296,27 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-          <h2 className="text-2xl font-bold text-navy-900">See it on your own numbers</h2>
-          <p className="mt-3 text-slate-600">
+      {/* CLOSING CTA — deep forest gradient with treeline, matching About */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-forest-700 via-forest-900 to-forest-950 pb-32 pt-16">
+        <div className="pointer-events-none absolute -right-20 top-10 h-72 w-72 animate-float rounded-full bg-forest-400/20 blur-3xl" />
+        <div className="relative mx-auto max-w-2xl px-6 text-center">
+          <h2 className="text-2xl font-bold text-white sm:text-3xl">
+            See it on your own numbers
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-forest-100">
             Sign up free, load the sample portfolio, and every feature above
             is running against your own simulated $10,000 in under a minute.
           </p>
           <Link
             href={authed ? "/account" : "/signup"}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-forest-500 px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-forest-400 hover:shadow-glow-green"
+            className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-semibold text-forest-800 shadow-lg transition hover:-translate-y-0.5 hover:shadow-glow-soft"
           >
             {authed ? "Go to Account" : "Get Started Free"}
             <ArrowRightIcon className="h-4 w-4" />
           </Link>
         </div>
+
+        <ForestSilhouette className="h-32 text-forest-950" />
       </section>
 
       <Footer />
