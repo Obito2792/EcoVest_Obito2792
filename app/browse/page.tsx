@@ -9,6 +9,7 @@ import IconChip from "@/components/IconChip";
 import CountUp from "@/components/CountUp";
 import { sectorIcon, sectorColor } from "@/components/sectorMeta";
 import StockSparkline from "@/components/StockSparkline";
+import BonusBadge from "@/components/BonusBadge";
 import { SparklesIcon } from "@/components/Icons";
 import { isGreenBonusEligible, formatBonusPercent } from "@/lib/bonus";
 import holdingsData from "@/data/holdings.json";
@@ -113,9 +114,7 @@ export default function BrowsePage() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {isGreenBonusEligible(h) && (
-                        <span className="badge bg-amber-100 text-xs text-amber-700">
-                          🌱 Bonus
-                        </span>
+                        <BonusBadge ticker={h.ticker} price={h.price} size="sm" />
                       )}
                       {matchedTags.map((t) => (
                         <span key={t} className="badge bg-violet-100 text-xs text-violet-700">
@@ -202,7 +201,7 @@ export default function BrowsePage() {
                           {h.esgScore}/10
                         </span>
                         {isGreenBonusEligible(h) && (
-                          <span className="badge bg-amber-100 text-amber-700">🌱 Bonus</span>
+                          <BonusBadge ticker={h.ticker} price={h.price} />
                         )}
                       </div>
                     </td>
