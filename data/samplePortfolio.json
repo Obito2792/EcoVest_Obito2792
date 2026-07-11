@@ -1,0 +1,15 @@
+[
+  { "ticker": "AAPL", "weight": 0.15 },
+  { "ticker": "MSFT", "weight": 0.10 },
+  { "ticker": "XOM", "weight": 0.12 },
+  { "ticker": "CVX", "weight": 0.08 },
+  { "ticker": "NEE", "weight": 0.05 },
+  { "ticker": "DUK", "weight": 0.05 },
+  { "ticker": "JPM", "weight": 0.10 },
+  { "ticker": "BAC", "weight": 0.08 },
+  { "ticker": "CAT", "weight": 0.07 },
+  { "ticker": "HON", "weight": 0.05 },
+  { "ticker": "PG", "weight": 0.05 },
+  { "ticker": "JNJ", "weight": 0.05 },
+  { "ticker": "LIN", "weight": 0.05 }
+]

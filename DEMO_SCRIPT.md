@@ -1,0 +1,16 @@
+# EcoVest — Demo Script (under 2 minutes)
+
+- "This is EcoVest — a simulated stock and ETF trading account that greenifies your portfolio. Everything here is paper trading: $10,000 in play money, no real brokerage, ever."
+- Sign up on screen with a throwaway email — "Account creation takes five seconds. You land with $10,000 in simulated cash."
+- Fill out **Create Your Profile** — name plus a couple of interests, e.g. Solar and EV & Battery — "This one-time step is what personalizes everything from here on: recommendations and the reallocation math itself."
+- On the Account page, click **Try Sample Portfolio** — "This buys into a 13-holding portfolio instantly — Apple, ExxonMobil, Chevron, JPMorgan — through the same trade engine as any manual order."
+- Jump to **Browse** — point at the **Recommended For You** row — "These are pulled from the same 19-holding dataset, filtered to match the interests I just picked." Point at a 🌱 Bonus badge — "And if I buy one of the top-tier clean-energy picks, I get a small cash bonus on the spot — like Robinhood giving you a free stock, just simulated here." Buy one live, show the bonus toast. Then: "And if I wanted to build my own, I can buy or sell any of the 19 stocks and ETFs at their listed price, with a confirmation step before anything executes."
+- Open **Transactions** — "Every trade — sample load or manual — writes a row here: ticker, side, shares, price, and the resulting cash balance. And here's that clean-energy bonus, logged as its own row."
+- Go to **Dashboard**. Point to the sector donut charts — "Current sector mix versus what a clean-energy tilt would look like."
+- Point to the Clean-Energy Tilt gauge — "Every holding carries a 1-to-10 clean-energy score. This portfolio's weighted score goes from about 4.8 up to 5.5 after reallocation."
+- Point to the Return/Risk chart — "This is the Bloomberg angle — real weighted expected return and volatility, before and after. Genuine portfolio math, not a green gimmick."
+- Point to the capital-tilt banner — "This reallocation steers real simulated dollars out of low-scoring holdings like Exxon and Chevron and into clean-energy equities like Enphase and First Solar, plus a green bond ETF — and if two candidates score similarly, the one matching my stated interests gets the larger share."
+- Click **Apply Reallocation** — "And this isn't just a suggestion — one click, and it executes as an actual batch of sells and buys against my account. Same trade engine, same transaction history." Flip back to Transactions to show the new rows if there's time.
+- Scroll to the ESG insight cards — "This paragraph and these summaries were generated live, right now, by the Gemini API — not hardcoded. Gemini reads a mock sustainability excerpt for Exxon and explains, in plain English, why it scored low."
+- Open the chat panel — "And here's the Gemini-powered assistant, grounded in my actual portfolio." Type: *"Why is XOM rated low on clean energy?"* — show the grounded answer. Then: *"What would happen if I dropped Tesla entirely?"*
+- Close with: "So in one flow: a working simulated brokerage for Bloomberg, a real capital shift toward clean energy for OneEthos, and three live, visible Gemini API calls for the Gemini track."
