@@ -31,7 +31,7 @@ ${holding.excerpt}
 
 Respond with only the summary text, no preamble, no headers.`;
 
-    const summary = await generateText(prompt, { maxOutputTokens: 260 });
+    const summary = await generateText(prompt, { maxOutputTokens: 400 });
 
     return NextResponse.json({ ticker: holding.ticker, summary });
   } catch (err) {

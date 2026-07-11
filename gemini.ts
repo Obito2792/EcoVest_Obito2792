@@ -8,7 +8,7 @@ import { GoogleGenAI } from "@google/genai";
 // credential (OAuth2 under the hood via Application Default Credentials),
 // which sidesteps that bug entirely. GOOGLE_APPLICATION_CREDENTIALS in
 // .env.local points at the downloaded service-account JSON key file.
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.0-flash-001";
 const PROJECT_ID = process.env.GCP_PROJECT_ID;
 const LOCATION = process.env.GCP_LOCATION || "us-central1";
 
@@ -68,12 +68,6 @@ export async function generateText(
   const config = {
     temperature: opts.temperature ?? 0.4,
     maxOutputTokens: opts.maxOutputTokens ?? 500,
-    // Gemini 2.5+ models spend part of maxOutputTokens on internal "thinking"
-    // before writing the visible answer, which was silently truncating our
-    // short summaries/rationales mid-sentence. These are simple, low-latency
-    // text tasks that don't need extended reasoning, so thinking is disabled
-    // to give the full token budget to the actual response text.
-    thinkingConfig: { thinkingBudget: 0 },
   };
 
   async function call(): Promise<string> {

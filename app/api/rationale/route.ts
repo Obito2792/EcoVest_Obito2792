@@ -47,7 +47,7 @@ Changes made: ${movesSummary}
 
 Respond with only the paragraph, no headers or preamble.`;
 
-    const rationale = await generateText(prompt, { maxOutputTokens: 350 });
+    const rationale = await generateText(prompt, { maxOutputTokens: 500 });
 
     return NextResponse.json({ rationale });
   } catch (err) {
