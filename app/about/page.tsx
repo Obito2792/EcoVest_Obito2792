@@ -83,7 +83,7 @@ export default function AboutPage() {
                 About EcoVest
               </h1>
               <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-forest-100 lg:mx-0">
-                EcoVest exists on one idea, spelled out in our own name: Green
+                EcoVest exists on one idea, spelled out in our primary goal: GROW — Green
                 Return On Wealth — and it's meant to be grown into, not just
                 read. Every clean-energy tilt is judged on the same real,
                 weighted portfolio math as any other return.
@@ -96,12 +96,14 @@ export default function AboutPage() {
       </section>
 
       <section className="bg-forest-50">
-        <div className="mx-auto max-w-2xl px-6 py-12 text-center">
-          <p className="text-sm text-forest-800/60">
-            Grow your wealth through returns that also grow a greener economy
-            — that's the whole thesis, and every feature in EcoVest traces
-            back to it.
-          </p>
+        <div className="mx-auto max-w-3xl px-6 py-12 text-center">
+          <div className="rounded-2xl border border-forest-200 bg-white px-6 py-7 shadow-sm sm:px-10">
+            <p className="text-base font-medium leading-relaxed text-navy-900 sm:text-lg">
+              Grow your wealth through returns that also grow a greener economy
+              <span className="text-forest-600"> — that&apos;s the whole thesis</span>, and
+              every feature in EcoVest traces back to it.
+            </p>
+          </div>
         </div>
       </section>
 
